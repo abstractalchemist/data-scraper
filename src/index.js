@@ -58,6 +58,26 @@ function series_code(id) {
     }
 }
 
+function processRelationsSimple(db) {
+    return Rx.Observable.fromPromise(httpPromise("http://localhost:5984/" + db + "/_design/view/_list/all/all"))
+	.map(JSON.parse)
+	.selectMany(data => {
+	    return Rx.Observable.fromArray(data)
+		.map(card => {
+		    let relatedTo = data.filter(({abilities}) => abilities.filter(o => o.includes(card.name)).length > 0);
+		    if(relatedTo.length > 0) {
+			console.log(card.name + ' is related to ' + relatedTo[0].name);
+			return Object.assign({}, card, { relatedTo: relatedTo[0].id })
+		    }
+		    return card;
+		})
+	})
+	.selectMany(data => {
+	    return Rx.Observable.fromPromise(httpPromise("http://localhost:5984/" + db + "/" + data._id, "PUT", JSON.stringify(data)));
+	})
+	
+}
+
 function storeIt(host, port, database) {
     return function(object) {
 	
@@ -216,21 +236,6 @@ function parseNanohaMovie() {
 
 }
 
-function parseSets() {
-    parseVividStrike().subscribe(
-	_=> {
-	},
-	err => {
-	    console.log(err);
-	});
-    parseNanohaMovie().subscribe(
-	_ => {
-	},
-	err => {
-	    console.log(err)
-	});
-}
-
 function scrapeIt() {
     console.log("running it");
     return Rx.Observable
@@ -266,5 +271,40 @@ function scrapeIt() {
 exports.scrapeIt = scrapeIt;
 exports.parseIt = parseIt;
 exports.parseSets = parseSets;
+
+
+function parseSets() {
+/*    parseVividStrike().subscribe(
+	_=> {
+	},
+	err => {
+	    console.log(err);
+	});
+    parseNanohaMovie().subscribe(
+	_ => {
+	},
+	err => {
+	    console.log(err)
+	});*/
+    processRelationsSimple("vivid_strike_ws")
+	.subscribe(
+	    data=> {
+//		console.log(data);
+	    },
+	    err => {
+		console.log(err);
+	    });
+    processRelationsSimple("nanoha_movie_ws")
+	.subscribe(
+	    data=> {
+//		console.log(data);
+	    },
+	    err => {
+		console.log(err);
+	    });
+    
+}
+
+
 
 parseSets();
