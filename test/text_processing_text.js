@@ -33,6 +33,7 @@ describe('text processing', function() {
 				 "Waiting Room] At the start of your Climax Phase, you may pay cost. If so,",
 				 "choose an \"Arf, Wolf Form\" in your Waiting Room and put it in the Slot this was",
 				 "in."])
+	expect(obj.rarity).to.equal('U');
 	expect(obj.lvl).to.equal("1");
 	expect(obj.id[0]).to.eql("Card No.: N1/W32-002  Rarity: U");
 	expect(obj.couchdbid).to.equal("n1-w32-002");

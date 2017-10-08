@@ -31,6 +31,7 @@ function parsePartition(partition) {
     let splitid = couchdbid.split('-');
 
     return {
+	rarity:id[2].trim(),
 	data,
 	lvl,
 	id,
@@ -95,7 +96,7 @@ function parseIt(file) {
 	    return new RegExp("Level:").test(data)
 	})
 	.selectMany(partition => {
-	    let { lvl, data, id, couchdbid, abilities, splitid } = parsePartition(partition);
+	    let { lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
 	    return fromPromise(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
 //		.do(data => fs.writeFile('/tmp/' + couchdbid + '.html', data, err => { if(err) console.log(err)} ))
 		.map(data => new JSDOM(data))
@@ -104,6 +105,7 @@ function parseIt(file) {
 		    //console.log(imgsrc);
 		    return {name:data[0],
 			    level:lvl,
+			    rarity:rarity,
 			    number:id[1].trim(),
 			    id:couchdbid.replace(/-/g,'_'),
 			    abilities:abilities,
