@@ -1,3 +1,5 @@
+// parse a booster translation file from Heart of the cards
+
 const { Observable } = require('rx');
 const { create, fromArray, fromPromise } = Observable;
 const fs = require('fs');
@@ -29,10 +31,12 @@ function parsePartition(partition) {
     let splitid = couchdbid.split('-');
 
     return {
+	data,
 	lvl,
 	id,
 	couchdbid,
-	abilities
+	abilities,
+	splitid
     }
 }
 
@@ -50,8 +54,7 @@ function findImageHref(dom) {
 
 }
 
-function parseIt(file) {
-//    console.log("Parsing it");
+function generateFileParser(file) {
     return create(observer => {
 	const read = fs.createReadStream(file);
 	let buffer = [];
@@ -65,6 +68,24 @@ function parseIt(file) {
 	    observer.onError();
 	})
     })
+}
+
+function generateHttpParser(url) {
+    return fromPromise(httpPromise(url));
+}
+
+
+
+function parseIt(file) {
+    //    console.log("Parsing it");
+    let parseFunc;
+    if(file.startsWith("/"))
+	parseFunc = generateFileParser;
+    else if(file.startsWith("http"))
+	parseFunc = generateHttpParser;
+    else
+	throw "Could not locate a parser for input";
+    return parseFunc(file)
 	.map(data => new JSDOM(data))
 	.map(dom => dom.window.document.querySelector("pre").textContent)
 	.selectMany(data => {
@@ -74,7 +95,7 @@ function parseIt(file) {
 	    return new RegExp("Level:").test(data)
 	})
 	.selectMany(partition => {
-	    let { lvl, data, id, couchdbid, abilities } = parsePartition(partition);
+	    let { lvl, data, id, couchdbid, abilities, splitid } = parsePartition(partition);
 	    return fromPromise(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
 //		.do(data => fs.writeFile('/tmp/' + couchdbid + '.html', data, err => { if(err) console.log(err)} ))
 		.map(data => new JSDOM(data))

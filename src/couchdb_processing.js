@@ -12,10 +12,11 @@ function processRelationsSimple(db) {
 	.map(JSON.parse)
 	.selectMany(data => {
 	    return fromArray(data)
+
 		.map(card => {
 		    let relatedTo = data.filter(({abilities}) => abilities.filter(o => o.includes(card.name)).length > 0);
 		    if(relatedTo.length > 0) {
-			console.log(card.name + ' is related to ' + relatedTo[0].name);
+//			console.log(card.name + ' is related to ' + relatedTo[0].name);
 			return Object.assign({}, card, { relatedTo: relatedTo[0].id })
 		    }
 		    return card;

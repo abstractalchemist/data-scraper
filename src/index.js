@@ -3,6 +3,8 @@ const JSDOM = jsdom.JSDOM;
 const Rx = require('rx');
 const { URL } = require('url');
 
+const { argv } = require('process');
+
 const fs = require('fs');
 
 const { httpPromise, retrieveHrefs } = require('./utils');
@@ -10,28 +12,29 @@ const { checkDOM, rebuildAbilities } = require('./dom_parsing');
 const { series_code } = require('./config');
 const { processRelationsSimple, storeIt } = require('./couchdb_processing');
 const { parseIt } = require('./translation_parsing');
+const { argMapping } = require('./series_info');
+const { cfg } = require('./config');
 
-
-function parseVividStrike() {
-    let store = storeIt('localhost','5984','vivid_strike_ws');
-    return parseIt('/home/jmhirata/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads/Heart of the Cards - Weiβ Schwarz ViVid Strike! Booster Pack Translation.html')
-	.selectMany(data => {
-	    return store(data);
-	});
+// function parseVividStrike() {
+//     let store = storeIt('localhost','5984','vivid_strike_ws');
+//     return parseIt('/home/jmhirata/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads/Heart of the Cards - Weiβ Schwarz ViVid Strike! Booster Pack Translation.html')
+// 	.selectMany(data => {
+// 	    return store(data);
+// 	});
 	    
-}
+// }
 
-function parseNanohaMovie() {
-    let store = storeIt('localhost','5984','nanoha_movie_ws');
-    return parseIt("/home/jmhirata/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads/Heart of the Cards - Weiβ Schwarz Nanoha the Movie 1st & 2nd A's Booster Pack Translation.html")
-	.selectMany(data => {
-	    return store(data);
-	});
+// function parseNanohaMovie() {
+//     let store = storeIt('localhost','5984','nanoha_movie_ws');
+//     return parseIt("/home/jmhirata/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads/Heart of the Cards - Weiβ Schwarz Nanoha the Movie 1st & 2nd A's Booster Pack Translation.html")
+// 	.selectMany(data => {
+// 	    return store(data);
+// 	});
 
-}
+// }
 
 function scrapeIt() {
-    console.log("running it");
+//    console.log("running it");
     return Rx.Observable
 	.range(1,16)
 	.selectMany(index => {
@@ -63,41 +66,78 @@ function scrapeIt() {
 
 
 exports.scrapeIt = scrapeIt;
-exports.parseIt = parseIt;
-exports.parseSets = parseSets;
 
-
-function parseSets() {
-/*    parseVividStrike().subscribe(
-	_=> {
-	},
-	err => {
-	    console.log(err);
-	});
-    parseNanohaMovie().subscribe(
-	_ => {
-	},
-	err => {
-	    console.log(err)
-	});*/
-    processRelationsSimple("vivid_strike_ws")
-	.subscribe(
-	    data=> {
-//		console.log(data);
-	    },
-	    err => {
-		console.log(err);
-	    });
-    processRelationsSimple("nanoha_movie_ws")
-	.subscribe(
-	    data=> {
-//		console.log(data);
-	    },
-	    err => {
-		console.log(err);
-	    });
+if(process.argv.length > 2) {
     
+    let inputs = process.argv.slice(2);
+    inputs.forEach(i => {
+//	console.log("looking at " + i);
+	let o = argMapping.find(({arg}) => i === arg)
+	if(o) {
+	    console.log(`processing ${o.url}`);
+	    let storage = storeIt(cfg.db_host, cfg.db_port, o.db);
+	    parseIt(o.url)
+		.selectMany(storage)
+		.subscribe(
+		_ => {
+		},
+		err => {
+		    console.log(`card processing ${err}`);
+		    processRelationsSimple(o.db).subscribe(
+			_ => {},
+			error => console.log(`relation processing ${error}`),
+			_ => console.log("relation processing completed")
+		    );
+		    
+		},
+		_ => {
+		    console.log("completed; processing relations");
+		    processRelationsSimple(o.db).subscribe(
+			_ => {},
+			error => console.log(`relation processing ${error}`),
+			_ => console.log("relation processing completed")
+		    );
+		}
+	    )
+	}
+    })
 }
+
+//exports.parseSets = parseSets;
+
+
+
+//function parseSets() {
+//     parseVividStrike().subscribe(
+// 	_=> {
+// 	},
+// 	err => {
+// 	    console.log(err);
+// 	});
+//     parseNanohaMovie().subscribe(
+// 	_ => {
+// 	},
+// 	err => {
+// 	    console.log(err)
+// 	});
+//     processRelationsSimple("vivid_strike_ws")
+// 	.subscribe(
+// 	    data=> {
+// //		console.log(data);
+// 	    },
+// 	    err => {
+// 		console.log(err);
+// 	    });
+//     processRelationsSimple("nanoha_movie_ws")
+// 	.subscribe(
+// 	    data=> {
+// //		console.log(data);
+// 	    },
+// 	    err => {
+// 		console.log(err);
+// 	    });
+    
+//}
 
 
 
