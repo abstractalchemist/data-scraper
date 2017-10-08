@@ -1,0 +1,20 @@
+{
+  "name": "data-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^11.3.0",
+    "rx": "^4.1.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "gulp": "^3.9.1",
+    "gulp-mocha": "^4.3.1"
+  }
+}
