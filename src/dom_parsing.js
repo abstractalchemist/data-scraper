@@ -21,4 +21,35 @@ function checkDOM(dom) {
 
 }
 
+const re = new RegExp("^TEXT:(.+)$");
+
+function rebuildAbilities(input) {
+
+    let buffer = [];
+    for(let i = 0; i < input.length; ++i) {
+	
+	let data = input[i];
+	
+	try {
+	    let rei = re.exec(data);
+	    if(rei && rei.length > 0) {
+		data = rei[1].trim();
+	    }
+	    if(!data.startsWith("[")) {
+		buffer[buffer.length - 1] += " " + data;
+	    }
+	    else
+		buffer.push(data);
+	}
+	catch(e) {
+	    console.log(e);
+	}
+	
+
+    }
+
+    return buffer;
+}
+
 exports.checkDOM = checkDOM;
+exports.rebuildAbilities = rebuildAbilities;

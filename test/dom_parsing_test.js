@@ -1,6 +1,6 @@
 const chai = require('chai');
 const expect = chai.expect;
-const { checkDOM  } = require('../src/dom_parsing');
+const { checkDOM, rebuildAbilities  } = require('../src/dom_parsing');
 const { JSDOM } = require('jsdom');
 
 describe('dom parsing', function() {
@@ -20,5 +20,12 @@ describe('dom parsing', function() {
 
 	// not sure why this is failing;  ignore for now
 	expect(item.image).to.equal('http://foo.com/bar/images/cards/bin');
+    })
+
+    it('rebuild abilities', function() {
+	const abilitiesList = ["[1] something else here", "to join", "[2] and here"];
+	const rebuilt = rebuildAbilities(abilitiesList);
+	expect(rebuilt).to.have.lengthOf(2);
+	expect(rebuilt).to.eql(["[1] something else here to join", "[2] and here"]);
     })
 })
