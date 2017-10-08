@@ -5,7 +5,7 @@ Adding new series
   - add some symbol
   - add couchdb db name
   - add heart of the cards booster translation page url
-  - also requires adding to deck builder populate_db the database drop/create instructions
+  - also requires adding to deck builder populate_db the database drop/create instructions, as well as prefix mapping ( card db id prefix )
   
 - must modify src/config.js
   - add to series_code function mapping
