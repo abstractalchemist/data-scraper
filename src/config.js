@@ -9,6 +9,13 @@ function series_code(id) {
     else if(id.startsWith('ll-w24')) {
 	return '120';
     }
+    else if(id.startsWith('n2-w25')) {
+	return '122';
+    }
+    else if(id.startsWith('n1-we06')) {
+	return '70'
+    }
+	
 }
 
 let cfg = (function() {
