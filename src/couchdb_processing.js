@@ -14,7 +14,12 @@ function processRelationsSimple(db) {
 	    return fromArray(data)
 
 		.map(card => {
-		    let relatedTo = data.filter(({abilities}) => abilities.filter(o => o.includes(card.name)).length > 0);
+		    let relatedTo = data.filter(({abilities}) => {
+			if(abilities.filter)
+			    return abilities.filter(o => o.includes(card.name)).length > 0
+			if(abilities.includes)
+			    return abilities.includes(card.name);
+		    })
 		    if(relatedTo.length > 0) {
 //			console.log(card.name + ' is related to ' + relatedTo[0].name);
 			return Object.assign({}, card, { relatedTo: relatedTo[0].id })
@@ -32,7 +37,8 @@ function storeIt(host, port, database) {
     return function(object) {
 	
 	let id = object.id;
-	return fromPromise(httpPromise(db_domain + "/" + database + "/" + id, "PUT", JSON.stringify(object)))
+//	console.log(`using ${host} and ${port} and ${database}`);
+	return fromPromise(httpPromise('http://' + host + ':' + port + "/" + database + "/" + id, "PUT", JSON.stringify(object)))
     }
 }
 

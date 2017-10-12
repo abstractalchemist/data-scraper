@@ -7,12 +7,14 @@ const { JSDOM } = require('jsdom');
 
 describe('utils test', function() {
     it('http', function(done) {
+	this.timeout(15000);
 	fromPromise(httpPromise('https://www.google.com'))
 	    .subscribe(
 		_ => {
 		  
 		},
-		_ => {
+		err => {
+		    done(err);
 		},
 		_ => {
 		    done();

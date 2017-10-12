@@ -15,6 +15,7 @@ const { parseIt } = require('./translation_parsing');
 const { argMapping } = require('./series_info');
 const { cfg } = require('./config');
 
+const { cardset } = require('./eng_scraper');
 // function parseVividStrike() {
 //     let store = storeIt('localhost','5984','vivid_strike_ws');
 //     return parseIt('/home/jmhirata/.local/share/torbrowser/tbb/x86_64/tor-browser_en-US/Browser/Downloads/Heart of the Cards - Weiβ Schwarz ViVid Strike! Booster Pack Translation.html')
@@ -67,41 +68,69 @@ function scrapeIt() {
 
 exports.scrapeIt = scrapeIt;
 
+let inputs = [];
 if(process.argv.length > 2) {
-    
-    let inputs = process.argv.slice(2);
-    inputs.forEach(i => {
-//	console.log("looking at " + i);
-	let o = argMapping.find(({arg}) => i === arg)
-	if(o) {
+    inputs = process.argv.slice(2);
+}
+else {
+    inputs = argMapping.map( ({arg}) => arg );
+}
+inputs.forEach(i => {
+    //	console.log("looking at " + i);
+    let o = argMapping.find(({arg}) => i === arg)
+    let storage = storeIt(cfg.db_host, cfg.db_port, o.db);
+    if(o) {
+	if(o.url) {
 	    console.log(`processing ${o.url}`);
-	    let storage = storeIt(cfg.db_host, cfg.db_port, o.db);
+	    
 	    parseIt(o.url)
 		.selectMany(storage)
 		.subscribe(
-		_ => {
-		},
-		err => {
-		    console.log(`card processing ${err}`);
-		    processRelationsSimple(o.db).subscribe(
-			_ => {},
-			error => console.log(`relation processing ${error}`),
-			_ => console.log("relation processing completed")
-		    );
-		    
-		},
-		_ => {
-		    console.log("completed; processing relations");
-		    processRelationsSimple(o.db).subscribe(
-			_ => {},
-			error => console.log(`relation processing ${error}`),
-			_ => console.log("relation processing completed")
-		    );
-		}
-	    )
+		    _ => {
+		    },
+		    err => {
+			console.log(`card processing ${err}`);
+			processRelationsSimple(o.db).subscribe(
+			    _ => {},
+			    error => console.log(`relation processing ${error}`),
+			    _ => console.log("relation processing completed")
+			);
+			
+		    },
+		    _ => {
+			console.log("completed; processing relations");
+			processRelationsSimple(o.db).subscribe(
+			    _ => {},
+			    error => console.log(`relation processing ${error}`),
+			    _ => console.log("relation processing completed")
+			);
+		    }
+		)
 	}
-    })
-}
+	else if(o.id) {
+	    console.log(`processing id ${o.id}`);
+	    cardset(o.id).
+		selectMany(storage).
+		subscribe(
+		    data => {
+		    },
+		    err => {
+			console.log(`card processing error: ${err}`);
+		    },
+		    _ => {
+			console.log("completed processing eng");
+			processRelationsSimple(o.db).subscribe(
+			    _ => {},
+			    error => console.log(`relation processing ${error}`),
+			    _ => console.log("relation processing completed")
+			);
+		    })
+	    
+	}
+    }
+
+})
+
 
 //exports.parseSets = parseSets;
 

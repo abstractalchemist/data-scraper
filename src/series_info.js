@@ -14,7 +14,19 @@ let argMapping = (function() {
 	  db: "nanoha_movie_1_ws" },
 	{ arg: "love_live_v1",
 	  url: "http://www.heartofthecards.com/translations/love_live!_booster_pack.html",
-	  db: "love_love_v1" }
+	  db: "love_live_v1" },
+	{ arg: "love_live_v1_en",
+	  id: 16,
+	  db: "love_live_v1_en" },
+	{ arg: "love_live_v2_en",
+	  id: 42,
+	  db: "love_live_v2_en" },
+	{ arg: "love_live_dx_v1",
+	  id: 32,
+	  db: "love_live_dx_v1" },
+	{ arg: "love_live_dx_v2",
+	  id: 59,
+	  db: "love_live_dx_v2" }
 	  
     ]
 })()
