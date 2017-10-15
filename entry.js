@@ -10,16 +10,38 @@ const mapper = function(doc) {
 }
 
 const lister = function(head,req) {
-    send("[");
-    row = getRow();
-    send(JSON.stringify(row.value));
-    
-    while(row = getRow()) {
-	send("," + JSON.stringify(row.value));
-    }
-    send("]");
+    provides('json', function() {
+	buffer  = [];
+//	row = getRow();
+//	buffer.push(row.value);
+	
+	while(row = getRow()) {
+	    //send("," + JSON.stringify(row.value));
+	    buffer.push(row.value)
+	}
+	return JSON.stringify(buffer);
+    })
+    provides('html', function() {
+	html = [];
+	html.push('<html><body><ul>');
+	while(row = getRow())
+	    html.push('<li>' + row.key + '</li>');
+	html.push('</ul></body></html>');
+	return html.join('');
+    })
+
 }
- 
+
+const bynumber = function(doc) {
+    if(doc.number)
+	emit(doc.number,doc);
+}
+
+const abilities = function(doc) {
+    if(doc.abilities)
+	emit(doc.abilities.join("."),doc);
+}
+
 let uuid = http.request({ method: "GET", host : host, port: "5984", path : "/_uuids"}, res => {
     let buffer = "";
     res.on('data', data => buffer += "" + data)
@@ -36,6 +58,12 @@ let uuid = http.request({ method: "GET", host : host, port: "5984", path : "/_uu
 	    views : {
 		all : {
 		    map : mapper.toString()
+		},
+		bynumber : {
+		    map : bynumber.toString()
+		},
+		byabilities: {
+		    map: abilities.toString()
 		}
 	    },
 	    lists : {

@@ -50,7 +50,7 @@ const info = function(data) {
 	     rarity,
 	     id:couchdbid,
 	     abilities:[abilities],
-	     image:image.src.replace('..','http://ws-tcg.com/en/cardlist')};
+	     image:image.src.replace('..','http://ws-tcg.com/en/cardlist').replace(',','.')};
 }
 
 let url = 'http://ws-tcg.com/en/jsp/cardlist/expansionDetail';
