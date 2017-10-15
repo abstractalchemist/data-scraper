@@ -1,3 +1,10 @@
+/* provides list and mapping functions for couchdb
+ * format of urls are 
+ * /<db>/_design/view/_view/<view key> - for views
+ * /<db>/_design/view/_list/<list key>/<view key> - for formatted views
+ * queries should be done with POST, where data is JSON {"keys": [.. some keys ]"}
+ */
+
 const http = require('http');
 
 const db = process.argv[2];
