@@ -19,7 +19,7 @@ recreate() {
     node entry.js $1 $HOST
 }
 
-#recreate decks
+recreate decks
 recreate vivid_strike_ws
 recreate nanoha_movie_ws
 recreate love_live_v1

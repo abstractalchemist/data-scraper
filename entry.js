@@ -2,13 +2,18 @@
  * format of urls are 
  * /<db>/_design/view/_view/<view key> - for views
  * /<db>/_design/view/_list/<list key>/<view key> - for formatted views
- * queries should be done with POST, where data is JSON {"keys": [.. some keys ]"}
+ * queries should be done with POST, where data is JSON {"keys": [.. some keys ]}
+ *
+ * arguments <db> <host> <arg> where arg is either "--add" or "--delete"
+ * --add - add the view to the database
+ * --delete - delete the view from the database
  */
 
 const http = require('http');
 
 const db = process.argv[2];
 const host = process.argv[3];
+const task = process.argv[4] || "--add";
 
 const mapper = function(doc) {
     if(doc) {
@@ -49,36 +54,65 @@ const abilities = function(doc) {
 	emit(doc.abilities.join("."),doc);
 }
 
-let uuid = http.request({ method: "GET", host : host, port: "5984", path : "/_uuids"}, res => {
-    let buffer = "";
-    res.on('data', data => buffer += "" + data)
-    res.on('end', _ => {
-	let ddoc = http.request({ method: "PUT", host: host, port: "5984", path: "/" + db + "/_design/view"}, res => {
-	    buffer = "";
-	    res.on('data', data => buffer += "" + data);
-	    res.on('end', _ => {
-		console.log(buffer)
+function addview() {
+    let uuid = http.request({ method: "GET", host : host, port: "5984", path : "/_uuids"}, res => {
+	let buffer = "";
+	res.on('data', data => buffer += "" + data)
+	res.on('end', _ => {
+	    let ddoc = http.request({ method: "PUT", host: host, port: "5984", path: "/" + db + "/_design/view"}, res => {
+		buffer = "";
+		res.on('data', data => buffer += "" + data);
+		res.on('end', _ => {
+		    console.log(buffer)
+		})
 	    })
-	})
 
-	ddoc.write(JSON.stringify({
-	    views : {
-		all : {
-		    map : mapper.toString()
+	    ddoc.write(JSON.stringify({
+		views : {
+		    all : {
+			map : mapper.toString()
+		    },
+		    bynumber : {
+			map : bynumber.toString()
+		    },
+		    byabilities: {
+			map: abilities.toString()
+		    }
 		},
-		bynumber : {
-		    map : bynumber.toString()
-		},
-		byabilities: {
-		    map: abilities.toString()
+		lists : {
+		    all : lister.toString()
 		}
-	    },
-	    lists : {
-		all : lister.toString()
-	    }
-	}));
-	ddoc.end();
+	    }));
+	    ddoc.end();
+	})
     })
-})
-uuid.write('');
-uuid.end();
+    uuid.write('');
+    uuid.end();
+}
+
+function removeview() {
+
+    let req = http.request({ method: "GET", host: host, port: "5984", path: "/" + db + "/_design/view"}, res => {
+	let buffer = [];
+	res.on('data', data => buffer.push(data))
+	res.on('end', _ => {
+	    let view = JSON.parse(buffer.join(''));
+	    if(view._rev) {
+		let deleteReq = http.request({method:"DELETE",host:host,port:"5984",path:"/" + db + "/_design/view?rev=" + view._rev}, res => {
+		    let buffer2 = [];
+		    res.on('data', data => buffer2.push(data));
+		    res.on('end', _ => {
+			console.log(buffer2.join(''));
+		    })
+		})
+		deleteReq.end();
+	    }
+	})
+    })
+    req.end();
+}
+
+if(task === '--add')
+    addview();
+else if(task === '--delete')
+    removeview();
