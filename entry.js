@@ -13,7 +13,7 @@ const http = require('http');
 
 const db = process.argv[2];
 const host = process.argv[3];
-const task = process.argv[4] || "--add";
+const task = process.argv[4] || "--recreate";
 
 const mapper = function(doc) {
     if(doc) {
@@ -54,7 +54,34 @@ const abilities = function(doc) {
 	emit(doc.abilities.join("."),doc);
 }
 
-function addview() {
+function recreatedb(endIt) {
+    let del = http.request({ method:"DELETE", host, port:"5984",path:"/" + db},
+			   res => {
+			       let buffer = []
+			       res.on('data',data => buffer.join('data'))
+
+			       res.on('end', _ => {
+				   console.log(`deleted ${db} with ${buffer.join('')}`)
+				   let create = http.request({method:"PUT",host,port:"5984",path:"/" + db},
+							     res => {
+								 buffer = []
+								 res.on('data', data => buffer.push(data))
+								 res.on('end', _ => {
+								     
+								     console.log(`finished creating ${db} with out ${buffer.join('')}`)
+								     if(endIt)
+									 endIt();
+								 })
+							     })
+				   create.write('');
+				   create.end();
+			       })
+			   });
+    del.write('');
+    del.end();
+}
+
+function addview(endIt) {
     let uuid = http.request({ method: "GET", host : host, port: "5984", path : "/_uuids"}, res => {
 	let buffer = "";
 	res.on('data', data => buffer += "" + data)
@@ -64,6 +91,8 @@ function addview() {
 		res.on('data', data => buffer += "" + data);
 		res.on('end', _ => {
 		    console.log(buffer)
+		    if(endIt)
+			endIt();
 		})
 	    })
 
@@ -116,3 +145,5 @@ if(task === '--add')
     addview();
 else if(task === '--delete')
     removeview();
+else if(task === '--recreate')
+    recreatedb(addview);

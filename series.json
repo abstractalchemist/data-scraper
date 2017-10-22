@@ -1,0 +1,89 @@
+[
+    {
+	"id":"vivid_strike_ws",
+	"label":"Vivid Strike",
+	"prefix":"VS/W50",
+	"info":
+	{
+	    "url":"http://www.heartofthecards.com/translations/vivid_strike!_booster_pack.html",
+	    "id":331
+	}
+    },
+    {
+	"id":"nanoha_movie_ws",
+	"label":"Nanoha Movie",
+	"prefix":["N1/W32","N2/W32"],
+	"info" :
+	{
+	    "url":"http://www.heartofthecards.com/translations/nanoha_the_movie_1st_-_2nd_a-s_booster_pack.html",
+	    "id":151
+	}
+    },
+    {
+	"id":"love_live_v1",
+	"label":"Love Live v1",
+	"prefix":"LL/W24",
+	"info":
+	{
+	    "url":"http://www.heartofthecards.com/translations/love_live!_booster_pack.html",
+	    "id":120
+	}
+	
+    },
+    {
+	"id":"nanoha_movie_1_ws",
+	"label":"Nanoha Movie 1st",
+	"prefix":"N1/WE06",
+	"info":
+	{
+	    "url":"http://www.heartofthecards.com/translations/nanoha_the_movie_1st_extra_pack.html",
+	    "id":70
+	}
+    },
+    {
+	"id":"nanoha_movie_2_ws",
+	"label":"Nanoha Movie 2nd",
+	"prefix":"N2/W25",
+	"info":
+	{
+	    "url":"http://www.heartofthecards.com/translations/nanoha_the_movie_2nd_a-s_booster_pack.html",
+	    "id":122
+	}
+    },
+    {
+	"id":"love_live_v1_en",
+	"label":"Love Live V1 (EN)",
+	"prefix":"LL/W24-E",
+	"info":
+	{
+	    "id":16
+	}
+    },
+    {
+	"id":"love_live_v2_en",
+	"label":"Love Live V2 (EN)",
+	"prefix":"LL/W34-E",
+	"info":
+	{
+	    "id":42
+	}
+    },
+    {
+	"id":"love_live_dx_v1",
+	"label":"Love Live DX V1",
+	"prefix":"LL/EN-W01",
+	"info":
+	{
+	    "id":32
+	}
+    },
+    {
+	"id":"love_live_dx_v2",
+	"label":"Love Live DX V2",
+	"prefix":"LL/EN-W02",
+	"info":
+	{
+	    "id":59
+	}
+    }
+]
