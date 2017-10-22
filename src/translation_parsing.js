@@ -1,7 +1,7 @@
 // parse a booster translation file from Heart of the cards
 
-const { Observable } = require('rx');
-const { create, fromArray, fromPromise } = Observable;
+const { Observable } = require('rxjs/Rx');
+const { create, from } = Observable;
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { httpPromise } = require('./utils');
@@ -79,17 +79,17 @@ function generateFileParser(file) {
 	read.on('data', chunk => buffer.push(chunk));
 	read.on('end', _ => {
 
-	    observer.onNext(buffer.join());
-	    observer.onCompleted()
+	    observer.onext(buffer.join());
+	    observer.complete()
 	})
 	read.on('error', err => {
-	    observer.onError();
+	    observer.error();
 	})
     })
 }
 
 function generateHttpParser(url) {
-    return fromPromise(httpPromise(url));
+    return from(httpPromise(url));
 }
 
 
@@ -106,15 +106,15 @@ function parseIt(file) {
     return parseFunc(file)
 	.map(data => new JSDOM(data))
 	.map(dom => dom.window.document.querySelector("pre").textContent)
-	.selectMany(data => {
-	    return fromArray(data.split("================================================================================"));
+	.mergeMap(data => {
+	    return from(data.split("================================================================================"));
 	})
 	.filter(data => {
 	    return new RegExp("Level:").test(data)
 	})
-	.selectMany(partition => {
+	.mergeMap(partition => {
 	    let { lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
-	    return fromPromise(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
+	    return from(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
 //		.do(data => fs.writeFile('/tmp/' + couchdbid + '.html', data, err => { if(err) console.log(err)} ))
 		.map(data => new JSDOM(data))
 		.map(findImageHref)

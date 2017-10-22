@@ -1,17 +1,15 @@
-const { Observable } = require('rx');
+const { Observable } = require('rxjs/Rx');
 const { httpPromise } = require('./utils');
-const fromArray = Observable.fromArray;
-const fromPromise = Observable.fromPromise;
-
+const { from } = Observable;
 const { cfg } = require('./config');
 
 const db_domain = "http://" + cfg.db_host + ":" + cfg.db_port;
 
 function processRelationsSimple(db) {
-    return fromPromise(httpPromise(db_domain + "/" + db + "/_design/view/_list/all/all"))
+    return from(httpPromise(db_domain + "/" + db + "/_design/view/_list/all/all"))
 	.map(JSON.parse)
-	.selectMany(data => {
-	    return fromArray(data)
+	.mergeMap(data => {
+	    return from(data)
 
 		.map(card => {
 		    let relatedTo = data.filter(({abilities}) => {
@@ -27,8 +25,8 @@ function processRelationsSimple(db) {
 		    return card;
 		})
 	})
-	.selectMany(data => {
-	    return fromPromise(httpPromise(db_domain + "/" + db + "/" + data._id, "PUT", JSON.stringify(data)));
+	.mergeMap(data => {
+	    return from(httpPromise(db_domain + "/" + db + "/" + data._id, "PUT", JSON.stringify(data)));
 	})
     
 }
@@ -38,7 +36,7 @@ function storeIt(host, port, database) {
 	
 	let id = object.id;
 //	console.log(`using ${host} and ${port} and ${database}`);
-	return fromPromise(httpPromise('http://' + host + ':' + port + "/" + database + "/" + id, "PUT", JSON.stringify(object)))
+	return from(httpPromise('http://' + host + ':' + port + "/" + database + "/" + id, "PUT", JSON.stringify(object)))
     }
 }
 

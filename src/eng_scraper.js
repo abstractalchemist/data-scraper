@@ -1,10 +1,9 @@
 const { JSDOM } = require('jsdom');
-const { Observable } = require('rx');
+const { Observable } = require('rxjs/Rx');
 const { httpPromise } = require('./utils');
-const { fromPromise, range, fromArray, just } = Observable;
+const { from, range, of } = Observable;
 
 const pages = function(data) {
-
     let dom = JSDOM.fragment(data);
     
     let links = dom.querySelectorAll('p.pageLink a');
@@ -16,6 +15,7 @@ const pages = function(data) {
 }
 
 const page = function(data) {
+//    console.log("looking at page");
     let dom = JSDOM.fragment(data);
     let cards = dom.querySelectorAll('tr');
     
@@ -56,24 +56,27 @@ const info = function(data) {
 let url = 'http://ws-tcg.com/en/jsp/cardlist/expansionDetail';
 
 const cardset = function(id) {
-    return fromPromise(httpPromise(url,'POST','expansion_id=' + id))
+    return from(httpPromise(url,'POST','expansion_id=' + id))
+
 	.map(pages)
-	.selectMany(input => {
+	.mergeMap(input => {
 
 	    return range(1,input);
 	})
-	.selectMany(i => {
-	    return fromPromise(httpPromise(url, 'POST', 'expansion_id=' + id + '&page=' + i))
+	.mergeMap(i => {
+	    return from(httpPromise(url, 'POST', 'expansion_id=' + id + '&page=' + i))
 	})
 	.map(page)
-	.selectMany(fromArray)
-	.selectMany( ({href}) => {
+	.mergeMap( data => {
+	    return from(data)
+	})
+	.mergeMap( ({href}) => {
 //	    console.log("looking up " + href);
-	    return fromPromise(httpPromise('http://ws-tcg.com/en/cardlist/list/' + href))
+	    return from(httpPromise('http://ws-tcg.com/en/cardlist/list/' + href))
 		.map(info)
 		.catch(e => {
 		    console.log("Error lookup: " + href + ": " + e);
-		    return just("")
+		    return of("")
 		})
 	})
 
