@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const { JSDOM } = require('jsdom');
 const { pages, page, info, cardset } = require('../src/eng_scraper');
-const { Observable } = require('rx');
-const { create, fromArray } = Observable;
+const { Observable } = require('rxjs/Rx');
+const { create, from } = Observable;
 const { createReadStream } = require('fs');
 
 let reader = function(input) {
@@ -11,11 +11,11 @@ let reader = function(input) {
 	let buffer = [];
 	stream.on('data', data => buffer.push(data));
 	stream.on('end', _ => {
-	    observer.onNext(buffer.join(''));
-	    observer.onCompleted();
+	    observer.next(buffer.join(''));
+	    observer.completed();
 	})
 	stream.on('error', err => {
-	    observer.onError(err);
+	    observer.error(err);
 	})
     })
 
@@ -35,7 +35,7 @@ describe('eng scraper', function() {
 	let cards = [];
 	reader('test-resources/expansionDetail.html')
 	    .map(page)
-	    .selectMany(fromArray)
+	    .mergeMap(fromArray)
 	    .subscribe(
 		data => cards.push(data),
 		err => done(err),

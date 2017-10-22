@@ -1,0 +1,7 @@
+*
+!node_modules/*
+!entry.js
+!run.js
+!mappings.js
+!series.json
+!src

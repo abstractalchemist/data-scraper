@@ -20,7 +20,7 @@
 
 let cfg = (function() {
     return {
-	db_host : "localhost",
+	db_host : process.argv[3] || "localhost",
 	db_port : "5984"
     }
 })()

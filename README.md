@@ -1,4 +1,4 @@
-Usage: node src/index.js <arg from src/series_info.js>
+Usage: node run.js <db> <configuration json file, usually series.json>
 
 Adding new series
 - must modify series.json

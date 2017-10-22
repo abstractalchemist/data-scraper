@@ -1,8 +1,8 @@
 const { spawn } = require('child_process')
 const { readFileSync } = require('fs')
 
-let db = "localhost"
-let config = "series.json"
+let db = process.argv[2]
+let config = process.argv[3]
 let mapping = spawn("node", ["mappings.js", config, db])
 let configdata = readFileSync(config)
 let parsed = JSON.parse(configdata)
@@ -29,4 +29,4 @@ let f = function({stdout, stderr}) {
     stderr.on('data', data => console.log(data.toString()))
 }
 
-f(spawn("node",["src/index.js", config]))
+f(spawn("node",["src/index.js", config, db]))

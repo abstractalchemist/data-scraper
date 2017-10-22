@@ -1,14 +1,14 @@
 const chai = require('chai');
 const expect = chai.expect;
 const { httpPromise, retrieveHrefs } = require('../src/utils.js');
-const { Observable } = require('rx');
-const fromPromise = Observable.fromPromise;
+const { Observable } = require('rxjs/Rx');
+const { from } = Observable.from;
 const { JSDOM } = require('jsdom');
 
 describe('utils test', function() {
     it('http', function(done) {
 	this.timeout(15000);
-	fromPromise(httpPromise('https://www.google.com'))
+	from(httpPromise('https://www.google.com'))
 	    .subscribe(
 		_ => {
 		  
