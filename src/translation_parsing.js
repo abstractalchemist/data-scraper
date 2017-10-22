@@ -11,14 +11,19 @@ const { rebuildAbilities } = require('./dom_parsing');
 const config_data = fs.readFileSync(process.argv[2]);
 const config = JSON.parse(config_data)
 function series_code(id) {
-
-    let info = config.find( ({prefix}) => {
-	if(typeof prefix === 'string')
-	    return prefix.replace("/","_").replace("-","_").toLowerCase() === id
-	return prefix.find( i => i.replace("/","_").replace("-","_").toLowerCase() === id)
+//    console.log(`checking ${id}`)
+    let info = config.find( ({prefix,info}) => {
+	if(info.url && info.id) {
+	    if(typeof prefix === 'string')
+		return id.startsWith(prefix.replace("/","_").replace("-","_").toLowerCase())
+	    return prefix.find( i => id.startsWith(i.replace("/","_").replace("-","_").toLowerCase()))
+	}
     })
-    if(info)
-	return info.id;
+    if(info) {
+	return info.info.id;
+    }
+    else
+	console.log("id mapping not found")
 }
 
 const re1 = new RegExp("TEXT:");
@@ -39,8 +44,8 @@ function parsePartition(partition) {
     
     let lvl = level ? level[1] : "no level";
     let id = idre.exec(data[2])
-    let couchdbid = id[1].trim().toLowerCase().replace('/','-');
-    let splitid = couchdbid.split('-');
+    let couchdbid = id[1].trim().toLowerCase().replace('/','_').replace('-','_')
+    let splitid = couchdbid.split('_');
 
     return {
 	rarity:id[2].trim(),
@@ -55,6 +60,7 @@ function parsePartition(partition) {
 
 function findImageHref(dom) {
     let img = dom.window.document.querySelectorAll('div.card_details img.thumbnail');
+//    console.log(img)
     if(img && img.length > 0) {
 //	console.log("parsed " + couchdbid);
 	return img[0].src.replace(/"/g,'');
@@ -64,7 +70,6 @@ function findImageHref(dom) {
 	return "";
     }
     return img;
-
 }
 
 function generateFileParser(file) {
@@ -114,12 +119,12 @@ function parseIt(file) {
 		.map(data => new JSDOM(data))
 		.map(findImageHref)
 		.map(imgsrc => {
-		    //console.log(imgsrc);
+//		    console.log(imgsrc);
 		    return {name:data[0],
 			    level:lvl,
 			    rarity:rarity,
 			    number:id[1].trim(),
-			    id:couchdbid.replace(/-/g,'_'),
+			    id:couchdbid,
 			    abilities:abilities,
 			    image:imgsrc}
 		})
