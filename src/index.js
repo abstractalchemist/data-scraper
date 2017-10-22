@@ -69,6 +69,7 @@ function scrapeIt() {
 exports.scrapeIt = scrapeIt;
 
 let inputs = fs.readFileSync(process.argv[2])
+inputs = JSON.parse(inputs)
 // if(process.argv.length > 2) {
 //     inputs = process.argv.slice(2);
 // }

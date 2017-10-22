@@ -6,8 +6,20 @@ const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { httpPromise } = require('./utils');
 const { rebuildAbilities } = require('./dom_parsing');
-const { series_code } = require('./config');
+//const { series_code } = require('./config');
 
+const config_data = fs.readFileSync(process.argv[2]);
+const config = JSON.parse(config_data)
+function series_code(id) {
+
+    let info = config.find( ({prefix}) => {
+	if(typeof prefix === 'string')
+	    return prefix.replace("/","_").replace("-","_").toLowerCase() === id
+	return prefix.find( i => i.replace("/","_").replace("-","_").toLowerCase() === id)
+    })
+    if(info)
+	return info.id;
+}
 
 const re1 = new RegExp("TEXT:");
 const lvlre = /^Level: ([0-9]).*/;

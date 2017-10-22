@@ -21,6 +21,8 @@ const mapper = function(doc) {
     }
 }
 
+const auth = "admin:1qaz@WSX"
+
 const lister = function(head,req) {
     provides('json', function() {
 	buffer  = [];
@@ -55,14 +57,14 @@ const abilities = function(doc) {
 }
 
 function recreatedb(endIt) {
-    let del = http.request({ method:"DELETE", host, port:"5984",path:"/" + db},
+    let del = http.request({ method:"DELETE", host, port:"5984",path:"/" + db,auth},
 			   res => {
 			       let buffer = []
 			       res.on('data',data => buffer.join('data'))
 
 			       res.on('end', _ => {
 				   console.log(`deleted ${db} with ${buffer.join('')}`)
-				   let create = http.request({method:"PUT",host,port:"5984",path:"/" + db},
+				   let create = http.request({method:"PUT",host,port:"5984",path:"/" + db, auth},
 							     res => {
 								 buffer = []
 								 res.on('data', data => buffer.push(data))
@@ -86,7 +88,7 @@ function addview(endIt) {
 	let buffer = "";
 	res.on('data', data => buffer += "" + data)
 	res.on('end', _ => {
-	    let ddoc = http.request({ method: "PUT", host: host, port: "5984", path: "/" + db + "/_design/view"}, res => {
+	    let ddoc = http.request({ method: "PUT", host: host, port: "5984", path: "/" + db + "/_design/view",auth}, res => {
 		buffer = "";
 		res.on('data', data => buffer += "" + data);
 		res.on('end', _ => {
@@ -127,7 +129,7 @@ function removeview() {
 	res.on('end', _ => {
 	    let view = JSON.parse(buffer.join(''));
 	    if(view._rev) {
-		let deleteReq = http.request({method:"DELETE",host:host,port:"5984",path:"/" + db + "/_design/view?rev=" + view._rev}, res => {
+		let deleteReq = http.request({method:"DELETE",host:host,port:"5984",path:"/" + db + "/_design/view?rev=" + view._rev,auth}, res => {
 		    let buffer2 = [];
 		    res.on('data', data => buffer2.push(data));
 		    res.on('end', _ => {

@@ -1,3 +1,7 @@
+/**
+ * creates the mapping databases
+ */
+
 const http = require('http');
 const fs = require('fs')
 
@@ -7,10 +11,12 @@ let host = process.argv[3]
 let inputdata = fs.readFileSync(process.argv[2]);
 let info = JSON.parse(inputdata);
 
+const auth = "admin:1qaz@WSX"
+
 function recreate(db, document, data) {
     let sets = http.request(
 	{
-	    method:"DELETE", host, port:5984, path:`/${db}`
+	    method:"DELETE", host, port:5984, path:`/${db}`, auth
 	},
 	res => {
 	    let buffer = [];
@@ -20,7 +26,7 @@ function recreate(db, document, data) {
 		       console.log(`deleted ${db} with ${buffer.join('')}`)
 		       let create = http.request(
 			   {
-			       method:"PUT", host, port:5984, path:`/${db}`
+			       method:"PUT", host, port:5984, path:`/${db}`,auth
 			   },
 			   res => {
 			       buffer = []
@@ -30,7 +36,7 @@ function recreate(db, document, data) {
 					  console.log(`created with ${buffer.join('')}`);
 					  let sets = http.request(
 					      {
-						  method:"PUT",host,port:5984,path:`/${db}/${document}`
+						  method:"PUT",host,port:5984,path:`/${db}/${document}`, auth
 					      },
 					      res => {
 						  buffer =[];

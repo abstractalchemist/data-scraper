@@ -23,3 +23,10 @@ mapping.on('close', _ => {
     })
 			   
 })
+
+let f = function({stdout, stderr}) {
+    stdout.on('data', data => console.log(data.toString()))
+    stderr.on('data', data => console.log(data.toString()))
+}
+
+f(spawn("node",["src/index.js", config]))
