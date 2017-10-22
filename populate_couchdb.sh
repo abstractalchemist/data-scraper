@@ -14,8 +14,8 @@ curl -X PUT http://$HOST:$PORT/cardmapping/mapping -d '{"mapping":[ {"prefix":"v
 
 
 recreate() {
-    curl -X DELETE http://$HOST:$PORT/$1
-    curl -X PUT http://$HOST:$PORT/$1
+#    curl -X DELETE http://$HOST:$PORT/$1
+#    curl -X PUT http://$HOST:$PORT/$1
     node entry.js $1 $HOST
 }
 

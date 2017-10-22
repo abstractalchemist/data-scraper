@@ -9,10 +9,10 @@ const fs = require('fs');
 
 const { httpPromise, retrieveHrefs } = require('./utils');
 const { checkDOM, rebuildAbilities } = require('./dom_parsing');
-const { series_code } = require('./config');
+//const { series_code } = require('./config');
 const { processRelationsSimple, storeIt } = require('./couchdb_processing');
 const { parseIt } = require('./translation_parsing');
-const { argMapping } = require('./series_info');
+//const { argMapping } = require('./series_info');
 const { cfg } = require('./config');
 
 const { cardset } = require('./eng_scraper');
@@ -68,29 +68,30 @@ function scrapeIt() {
 
 exports.scrapeIt = scrapeIt;
 
-let inputs = [];
-if(process.argv.length > 2) {
-    inputs = process.argv.slice(2);
-}
-else {
-    inputs = argMapping.map( ({arg}) => arg );
-}
-inputs.forEach(i => {
+let inputs = fs.readFileSync(process.argv[2])
+// if(process.argv.length > 2) {
+//     inputs = process.argv.slice(2);
+// }
+// else {
+//     inputs = argMapping.map( ({arg}) => arg );
+// }
+inputs.forEach(o => {
     //	console.log("looking at " + i);
-    let o = argMapping.find(({arg}) => i === arg)
-    let storage = storeIt(cfg.db_host, cfg.db_port, o.db);
+//    let o = argMapping.find(({arg}) => i === arg)
+    let storage = storeIt(cfg.db_host, cfg.db_port, o.id);
     if(o) {
-	if(o.url) {
-	    console.log(`processing ${o.url}`);
+	
+	if(o.info.url) {
+	    console.log(`processing ${o.info.url}`);
 	    
-	    parseIt(o.url)
+	    parseIt(o.info.url)
 		.selectMany(storage)
 		.subscribe(
 		    _ => {
 		    },
 		    err => {
 			console.log(`card processing ${err}`);
-			processRelationsSimple(o.db).subscribe(
+			processRelationsSimple(o.id).subscribe(
 			    _ => {},
 			    error => console.log(`relation processing ${error}`),
 			    _ => console.log("relation processing completed")
@@ -99,7 +100,7 @@ inputs.forEach(i => {
 		    },
 		    _ => {
 			console.log("completed; processing relations");
-			processRelationsSimple(o.db).subscribe(
+			processRelationsSimple(o.id).subscribe(
 			    _ => {},
 			    error => console.log(`relation processing ${error}`),
 			    _ => console.log("relation processing completed")
@@ -107,9 +108,9 @@ inputs.forEach(i => {
 		    }
 		)
 	}
-	else if(o.id) {
+	else if(o.info.id) {
 	    console.log(`processing id ${o.id}`);
-	    cardset(o.id).
+	    cardset(o.info.id).
 		selectMany(storage).
 		subscribe(
 		    data => {
@@ -119,7 +120,7 @@ inputs.forEach(i => {
 		    },
 		    _ => {
 			console.log("completed processing eng");
-			processRelationsSimple(o.db).subscribe(
+			processRelationsSimple(o.id).subscribe(
 			    _ => {},
 			    error => console.log(`relation processing ${error}`),
 			    _ => console.log("relation processing completed")

@@ -55,5 +55,34 @@ function recreate(db, document, data) {
 }
 
 
-recreate('cardsets','sets', { sets:info.map( ({id,label}) => {id,label})})
-recreate('cardmapping', 'mapping', {mapping:info.map( ({prefix,id:db}) => {prefix,db})})
+recreate('cardsets','sets', { sets:info.map( ({id,label}) => {
+    return {id,label}
+}) })
+
+recreate('cardmapping', 'mapping', {
+    mapping:info.map( ({prefix,id:db}) => {
+	let p = prefix;
+	if(typeof p === 'string') {
+	    return {
+		prefix:prefix.replace('/','_').replace('-','_').toLowerCase(),
+		db
+	    }
+	}
+	else {
+	    return prefix.map(p => {
+		return {
+		    prefix:p.replace('/','_').replace('-','_').toLowerCase(),
+		    db
+		}
+	    })
+	}
+    }).reduce( (acc, val) => {
+	if(val.length)
+	    return acc.concat(val)
+	else {
+	    acc.push(val)
+	    return acc;
+	}
+    }, [])
+})
+
