@@ -26,8 +26,13 @@ function series_code(id) {
 	console.log("id mapping not found")
 }
 
+const colorRe = /^Color: ([a-zA-Z]+)/
 const re1 = new RegExp("TEXT:");
 const lvlre = /^Level: ([0-9]).*/;
+const costre = /Cost: ([0-9])/;
+const powerre = /Power: ([0-9]{0,4})/
+const soulre = /Soul: ([0-9])/
+const traitre = /Trait 1:(.+)Trait 2:(.+)/
 const idre = new RegExp("^Card No[.]: (.+)\w*Rarity:(.+)");
 
 function parsePartition(partition) {
@@ -44,6 +49,11 @@ function parsePartition(partition) {
     
     let lvl = level ? level[1] : "no level";
     let id = idre.exec(data[2])
+    let power = powerre.exec(data[4])
+    let soul = soulre.exec(data[4])
+    let cost = costre.exec(data[4])
+    let traits = traitre.exec(data[5])
+    let color = colorRe.exec(data[3])
     let couchdbid = id[1].trim().toLowerCase().replace('/','_').replace('-','_')
     let splitid = couchdbid.split('_');
 
@@ -54,7 +64,13 @@ function parsePartition(partition) {
 	id,
 	couchdbid,
 	abilities,
-	splitid
+	splitid,
+	power:power ? power[1] : "no power",
+	soul:soul ? soul[1] : "no soul",
+	cost: cost ? cost[1] : "no cost",
+	color: color ? color[1].toLowerCase() : "no color",
+	trait1: traits ? traits[1].trim() : "no trait1",
+	trait2: traits ? traits[2].trim() : "no trait2"
     }
 }
 
@@ -113,7 +129,8 @@ function parseIt(file) {
 	    return new RegExp("Level:").test(data)
 	})
 	.mergeMap(partition => {
-	    let { lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
+	    let { color, power, soul, cost, trait1, trait2, lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
+	    
 	    return from(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
 //		.do(data => fs.writeFile('/tmp/' + couchdbid + '.html', data, err => { if(err) console.log(err)} ))
 		.map(data => new JSDOM(data))
@@ -126,6 +143,12 @@ function parseIt(file) {
 			    number:id[1].trim(),
 			    id:couchdbid,
 			    abilities:abilities,
+			    color,
+			    power,
+			    soul,
+			    cost,
+			    trait1,
+			    trait2,
 			    image:imgsrc}
 		})
 	})

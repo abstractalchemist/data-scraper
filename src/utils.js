@@ -29,6 +29,7 @@ function httpPromise(url, method, data) {
 				       if(res.statusCode === 200 || res.statusCode == 201) {
 					   let buffer = [];
 					   res.on('data', chunk => buffer.push(chunk));
+					   res.on('error', err => console.log(`${err} on ${url} with ${method}`))
 					   res.on('end', _ => {
 					       resolve(buffer.join(''));
 					   })
@@ -36,7 +37,8 @@ function httpPromise(url, method, data) {
 					   
 				       }
 				       else {
-					   reject("error " + res.statusCode + " on " + url);
+					   console.log(`error ${res.statusCode} on ${url}`);
+					   reject(`error ${res.statusCode} on ${url}`);
 				       }
 				   });
 	req.on('error', err => {
