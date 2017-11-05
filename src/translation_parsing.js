@@ -30,7 +30,8 @@ const colorRe = /^Color: ([a-zA-Z]+)/
 const re1 = new RegExp("TEXT:");
 const lvlre = /^Level: ([0-9]).*/;
 const costre = /Cost: ([0-9])/;
-const powerre = /Power: ([0-9]{0,4})/
+const powerre = /Power: ([0-9]{0,5})/
+const triggerre = /^Triggers: (.+)$/
 const soulre = /Soul: ([0-9])/
 const traitre = /Trait 1:(.+)Trait 2:(.+)/
 const idre = new RegExp("^Card No[.]: (.+)\w*Rarity:(.+)");
@@ -54,11 +55,13 @@ function parsePartition(partition) {
     let cost = costre.exec(data[4])
     let traits = traitre.exec(data[5])
     let color = colorRe.exec(data[3])
+    let trigger = triggerre.exec(data[6])
     let couchdbid = id[1].trim().toLowerCase().replace('/','_').replace('-','_')
     let splitid = couchdbid.split('_');
 
     return {
 	rarity:id[2].trim(),
+	trigger:trigger[1],
 	data,
 	lvl,
 	id,
@@ -108,7 +111,23 @@ function generateHttpParser(url) {
     return from(httpPromise(url));
 }
 
-
+// heart of the cards map
+function trigger_map(trigger) {
+    switch(trigger) {
+    case "None":
+	return ""
+    case "Soul Gate":
+	return "soul gate";
+    case "2 Soul":
+	return "soul2"
+    case "Soul":
+	return "soul"
+    case "Salvage":
+	return "salvage"
+    case "Treasure":
+	return "treasure"
+    }
+}
 
 function parseIt(file) {
     //    console.log("Parsing it");
@@ -129,7 +148,7 @@ function parseIt(file) {
 	    return new RegExp("Level:").test(data)
 	})
 	.mergeMap(partition => {
-	    let { color, power, soul, cost, trait1, trait2, lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
+	    let { trigger, color, power, soul, cost, trait1, trait2, lvl, data, id, couchdbid, abilities, splitid, rarity } = parsePartition(partition);
 	    
 	    return from(httpPromise('https://littleakiba.com/tcg/weiss-schwarz/card.php?series_id=' + series_code(couchdbid) + '&code=' + splitid[splitid.length - 1]  +  '&view=Go'))
 //		.do(data => fs.writeFile('/tmp/' + couchdbid + '.html', data, err => { if(err) console.log(err)} ))
@@ -143,6 +162,7 @@ function parseIt(file) {
 			    number:id[1].trim(),
 			    id:couchdbid,
 			    abilities:abilities,
+			    trigger_action:trigger_map(trigger),
 			    color,
 			    power,
 			    soul,
