@@ -76,6 +76,7 @@ const map_to_db = o => {
 		    },
 		    err => {
 			console.log(`card processing ${err}`);
+			
 			processRelationsSimple(o.id).subscribe(
 			    _ => {},
 			    error => console.log(`relation processing ${error}`),
