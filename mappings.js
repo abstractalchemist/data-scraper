@@ -11,12 +11,12 @@ let host = process.argv[3]
 let inputdata = fs.readFileSync(process.argv[2]);
 let info = JSON.parse(inputdata);
 
-const auth = "admin:1qaz@WSX"
+//const auth = "admin:1qaz@WSX"
 
 function recreate(db, document, data) {
     let sets = http.request(
 	{
-	    method:"DELETE", host, port:5984, path:`/${db}`, auth
+	    method:"DELETE", host, port:5984, path:`/${db}`
 	},
 	res => {
 	    let buffer = [];
@@ -26,7 +26,7 @@ function recreate(db, document, data) {
 		       console.log(`deleted ${db} with ${buffer.join('')}`)
 		       let create = http.request(
 			   {
-			       method:"PUT", host, port:5984, path:`/${db}`,auth
+			       method:"PUT", host, port:5984, path:`/${db}`
 			   },
 			   res => {
 			       buffer = []
@@ -36,7 +36,7 @@ function recreate(db, document, data) {
 					  console.log(`created with ${buffer.join('')}`);
 					  let sets = http.request(
 					      {
-						  method:"PUT",host,port:5984,path:`/${db}/${document}`, auth
+						  method:"PUT",host,port:5984,path:`/${db}/${document}`
 					      },
 					      res => {
 						  buffer =[];

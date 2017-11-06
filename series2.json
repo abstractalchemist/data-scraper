@@ -8,5 +8,27 @@
 	    "url":"http://www.heartofthecards.com/translations/vivid_strike!_booster_pack.html",
 	    "id":331
 	}
+    },
+        {
+	"id":"nanoha_movie_ws",
+	"label":"Nanoha Movie",
+	"prefix":["N1/W32","N2/W32"],
+	"info" :
+	{
+	    "url":"http://www.heartofthecards.com/translations/nanoha_the_movie_1st_-_2nd_a-s_booster_pack.html",
+	    "id":151
+	}
+    },
+    {
+	"id":"love_live_v1",
+	"label":"Love Live v1",
+	"prefix":"LL/W24",
+	"info":
+	{
+	    "url":"http://www.heartofthecards.com/translations/love_live!_booster_pack.html",
+	    "id":120
+	}
+	
     }
+
 ]
