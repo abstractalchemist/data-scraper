@@ -46,6 +46,10 @@ const map_trigger_value = function(value) {
 	    return "pool"
 	if(value.endsWith("bounce.gif"))
 	    return "bounce"
+	if(value.endsWith("shot.gif"))
+	    return "shot"
+	if(value.endsWith("gate.gif"))
+	    return "gate"
 	else {
 	    console.log(`failed to map ${value} as a trigger value`)
 	    return "";
@@ -66,6 +70,8 @@ const processtrigger = function(trigger_data) {
 	    let two = map_trigger_value(trigger2)
 	    if(one === 'soul' && two === 'soul')
 		return "soul2"
+	    if(one === 'soul' && two === 'gate')
+		return "soul gate"
 	}
 
 	// only trigger1
