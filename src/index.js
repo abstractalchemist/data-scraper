@@ -15,36 +15,6 @@ const { cfg } = require('./config');
 
 const { cardset } = require('./eng_scraper');
 
-// function scrapeIt() {
-// //    console.log("running it");
-//     return Rx.Observable
-// 	.range(1,16)
-// 	.mergeMap(index => {
-// 	    return Rx.Observable.from(httpPromise("http://www.heartofthecards.com/code/wscardsearch.html?neostandard=vividstrike&cardlimit=10&cardpage=" + index + "&cardpower1=any&cardpower2=any&cardlevel1=any&cardlevel2=any&cardsoul1=any&cardsoul2=any&cardcost1=any&cardcost2=any&cardcolor=any&cardtype=any"))
-// 	})
-// 	.map(data => {
-
-// 	    return new JSDOM(data);
-// 	})
-
-// 	.mergeMap(dom => {
-// 	    return Rx.Observable.from(retrieveHrefs(dom));
-// 	})
-
-// 	.pluck('href')
-// 	.filter(href => /cardlist/.test(href))
-// 	.delay(1000)
-// 	.mergeMap(href => {
-// 	    console.log("fetching " + href);
-// 	    return Rx.Observable.from(httpPromise(href));
-// 	})
-// 	.map(data => {
-
-// 	    return new JSDOM(data)
-// 	})
-// 	.map(checkDOM);
-
-// }
 function pause(time) {
     return function(data) {
 	return Rx.Observable.create(obs => {
@@ -55,11 +25,110 @@ function pause(time) {
 	})
     }
 }
+const mapper = function(doc) {
+    if(doc) {
+	emit(null,doc)
+    }
+ }
+
+//const auth = "admin:1qaz@WSX"
+
+const lister = function(head,req) {
+    provides('json', function() {
+	buffer  = [];
+//	row = getRow();
+//	buffer.push(row.value);
+	
+	while(row = getRow()) {
+	    //send("," + JSON.stringify(row.value));
+	    buffer.push(row.value)
+	}
+	return JSON.stringify(buffer);
+    })
+    provides('html', function() {
+	html = [];
+	html.push('<html><body><ul>');
+	while(row = getRow())
+	    html.push('<li>' + row.key + '</li>');
+	html.push('</ul></body></html>');
+	return html.join('');
+    })
+
+}
+
+const bynumber = function(doc) {
+    if(doc.number)
+	emit(doc.number,doc);
+}
+
+const abilities = function(doc) {
+    if(doc.abilities)
+	emit(doc.abilities.join("."),doc);
+}
+
+
+function addview({id}) {
+    return Rx.Observable.from(httpPromise(`http://${cfg.db_host}:${cfg.db_port}/${id}/_design/view`, 'PUT',
+		JSON.stringify({
+		    views : {
+			all : {
+			    map : mapper.toString()
+			},
+			bynumber : {
+			    map : bynumber.toString()
+			},
+			byabilities: {
+			    map: abilities.toString()
+			}
+		    },
+		    lists : {
+			all : lister.toString()
+		    }
+		})))
+}
+
 
 //exports.scrapeIt = scrapeIt;
 //console.log(process)
 let inputs = fs.readFileSync(argv[2])
 inputs = JSON.parse(inputs)
+
+function recreatedb({id,label,prefix}) {
+    let url = `http://${cfg.db_host}:${cfg.db_port}/${id}`
+    let sets = `http://${cfg.db_host}:${cfg.db_port}/cardsets/sets`
+    let mapping = `http://${cfg.db_host}:${cfg.db_port}/cardmapping/mapping`
+    return Rx.Observable.from(httpPromise(url,'DELETE'))
+	.mergeMap(_ => httpPromise(url,'PUT'))
+	.mergeMap(_ => addview({id}))
+	.mergeMap(_ => {
+	    return Rx.Observable.from(httpPromise(sets,'GET'))
+		.map(JSON.parse)
+		.mergeMap(data => {
+		    let sets = data.sets
+		    if(sets.find( ({id:set_id}) => id === set_id))
+			return Rx.Observable.of(data)
+		    else {
+			data.sets = data.sets.concat([{id, label}])
+			return Rx.Observable.from(httpPromise(sets,'PUT', JSON.stringify(data)))
+		    }
+		})
+	})
+	.mergeMap(_ => {
+	    return Rx.Observable.from(httpPromise(mapping, 'GET'))
+		.map(JSON.parse)
+		.mergeMap(data => {
+		    let sets = data.mapping
+		    if(sets.find( ({db}) => db === id))
+			return Rx.Observable.of(data)
+		    else {
+			data.sets = data.sets.concat([{db:id, prefix:prefix.replace('/','_').replace('-','_').toLowerCase(),}])
+			return Rx.Observable.from(httpPromise(sets,'PUT', JSON.stringify(data)))
+		    }
+		})
+	    
+	})
+}
+
 
 
 const map_to_db = o => {
@@ -68,8 +137,9 @@ const map_to_db = o => {
 	
 	if(o.info.url) {
 	    console.log(`processing ${o.info.url}`);
-	    
-	    parseIt(o.info.url)
+
+	    recreatedb(o)
+		.mergeMap(_=> parseIt(o.info.url))
 		.mergeMap(storage)
 		.subscribe(
 		    _ => {
@@ -93,12 +163,13 @@ const map_to_db = o => {
 			);
 		    }
 		)
-	}
+	}	 
 	else if(o.info.id) {
 	    console.log(`processing id ${o.id}`);
-	    cardset(o.info.id).
-		mergeMap(storage).
-		subscribe(
+	    recreatedb(o)
+		.mergeMap( _ => cardset(o.info.id))
+		.mergeMap(storage)
+		.subscribe(
 		    data => {
 		    },
 		    err => {
@@ -112,6 +183,7 @@ const map_to_db = o => {
 			    _ => console.log("relation processing completed")
 			);
 		    })
+	    
 	    
 	}
     }
