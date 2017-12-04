@@ -3,6 +3,7 @@ const https = require('https');
 const urlmod = require('url');
 
 function httpPromise(url, method, data) {
+//    console.log(`looking up ${url}`)
     const u = urlmod.parse(url);
     method = method || "GET";
     headers = {};
@@ -25,8 +26,9 @@ function httpPromise(url, method, data) {
 				     path:u.pathname + (u.search || ""),
 				     protocol:u.protocol},
 				   res => {
-				       
-				       if(res.statusCode === 200 || res.statusCode == 201) {
+//				       console.log(`lookup on ${u.pathname} with status ${res.statusCode}`)
+				       if(res.statusCode === 200 || res.statusCode === 201) {
+					   
 					   let buffer = [];
 					   res.on('data', chunk => buffer.push(chunk));
 					   res.on('error', err => console.log(`${err} on ${url} with ${method}`))

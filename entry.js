@@ -19,7 +19,7 @@ const mapper = function(doc) {
     if(doc) {
 	emit(null,doc)
     }
-}
+ }
 
 //const auth = "admin:1qaz@WSX"
 

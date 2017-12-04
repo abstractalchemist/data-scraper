@@ -98,17 +98,21 @@ function recreatedb({id,label,prefix}) {
     let sets = `http://${cfg.db_host}:${cfg.db_port}/cardsets/sets`
     let mapping = `http://${cfg.db_host}:${cfg.db_port}/cardmapping/mapping`
     return Rx.Observable.from(httpPromise(url,'DELETE'))
+	.catch(_ => Rx.Observable.of({}))
 	.mergeMap(_ => httpPromise(url,'PUT'))
+
 	.mergeMap(_ => addview({id}))
 	.mergeMap(_ => {
 	    return Rx.Observable.from(httpPromise(sets,'GET'))
 		.map(JSON.parse)
 		.mergeMap(data => {
-		    let sets = data.sets
-		    if(sets.find( ({id:set_id}) => id === set_id))
+		    
+		    let data_sets = data.sets
+		    if(data_sets.find( ({id:set_id}) => id === set_id))
 			return Rx.Observable.of(data)
 		    else {
 			data.sets = data.sets.concat([{id, label}])
+			
 			return Rx.Observable.from(httpPromise(sets,'PUT', JSON.stringify(data)))
 		    }
 		})
@@ -117,12 +121,12 @@ function recreatedb({id,label,prefix}) {
 	    return Rx.Observable.from(httpPromise(mapping, 'GET'))
 		.map(JSON.parse)
 		.mergeMap(data => {
-		    let sets = data.mapping
-		    if(sets.find( ({db}) => db === id))
+		    let data_sets = data.mapping
+		    if(data_sets.find( ({db}) => db === id))
 			return Rx.Observable.of(data)
 		    else {
-			data.sets = data.sets.concat([{db:id, prefix:prefix.replace('/','_').replace('-','_').toLowerCase(),}])
-			return Rx.Observable.from(httpPromise(sets,'PUT', JSON.stringify(data)))
+			data.mapping = data.mapping.concat([{db:id, prefix:prefix.replace('/','_').replace('-','_').toLowerCase(),}])
+			return Rx.Observable.from(httpPromise(mapping,'PUT', JSON.stringify(data)))
 		    }
 		})
 	    

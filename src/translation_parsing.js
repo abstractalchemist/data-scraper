@@ -37,43 +37,60 @@ const traitre = /Trait 1:(.+)Trait 2:(.+)/
 const idre = new RegExp("^Card No[.]: (.+)\w*Rarity:(.+)");
 
 function parsePartition(partition) {
-    const data = partition.split("\n").map(o => o.trim()).filter(o => o.length > 0);
-    const index = data.findIndex(input => re1.test(input));
-    let abilities = "";
-    if(index >= 0) {
-	
-	const sliced = data.slice(index);
-
-	abilities = rebuildAbilities(sliced);
-    }
-    const level = lvlre.exec(data[4]);
     
-    let lvl = level ? level[1] : "no level";
-    let id = idre.exec(data[2])
-    let power = powerre.exec(data[4])
-    let soul = soulre.exec(data[4])
-    let cost = costre.exec(data[4])
-    let traits = traitre.exec(data[5])
-    let color = colorRe.exec(data[3])
-    let trigger = triggerre.exec(data[6])
-    let couchdbid = id[1].trim().toLowerCase().replace('/','_').replace('-','_')
-    let splitid = couchdbid.split('_');
+    try {
+	let data = partition.split("\n").map(o => o.trim()).filter(o => o.length > 0);
+	const index = data.findIndex(input => re1.test(input));
+	let abilities = "";
+	if(index >= 0) {
+	    
+	    const sliced = data.slice(index);
 
-    return {
-	rarity:id[2].trim(),
-	trigger:trigger[1],
-	data,
-	lvl,
-	id,
-	couchdbid,
-	abilities,
-	splitid,
-	power:power ? power[1] : "no power",
-	soul:soul ? soul[1] : "no soul",
-	cost: cost ? cost[1] : "no cost",
-	color: color ? color[1].toLowerCase() : "no color",
-	trait1: traits ? traits[1].trim() : "no trait1",
-	trait2: traits ? traits[2].trim() : "no trait2"
+	    abilities = rebuildAbilities(sliced);
+	}
+	const level = lvlre.exec(data[4]);
+	if(index == 7) {
+
+	    // no translation
+	    data = [""].concat(data)
+	}
+	
+	let lvl = level ? level[1] : "no level";
+	let id = idre.exec(data[2])
+	if(!id) {
+	    console.log("Could not find id for " + partition + " in data " + data[0])
+	    throw new Error("id not found")
+	}
+	let power = powerre.exec(data[4])
+	let soul = soulre.exec(data[4])
+	let cost = costre.exec(data[4])
+	let traits = traitre.exec(data[5])
+	let color = colorRe.exec(data[3])
+	let trigger = triggerre.exec(data[6])
+	
+	let couchdbid = id[1].trim().toLowerCase().replace('/','_').replace('-','_')
+	let splitid = couchdbid.split('_');
+
+	return {
+	    rarity:id[2].trim(),
+	    trigger:trigger[1],
+	    data,
+	    lvl,
+	    id,
+	    couchdbid,
+	    abilities,
+	    splitid,
+	    power:power ? power[1] : "no power",
+	    soul:soul ? soul[1] : "no soul",
+	    cost: cost ? cost[1] : "no cost",
+	    color: color ? color[1].toLowerCase() : "no color",
+	    trait1: traits ? traits[1].trim() : "no trait1",
+	    trait2: traits ? traits[2].trim() : "no trait2"
+	}
+    }
+    catch(e) {
+	fs.writeFileSync('/tmp/errror.html', partition)
+	throw e
     }
 }
 

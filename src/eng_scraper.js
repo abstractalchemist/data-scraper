@@ -1,8 +1,8 @@
 const { JSDOM } = require('jsdom');
 const { Observable } = require('rxjs/Rx');
 const { httpPromise } = require('./utils');
-const { from, range, of } = Observable;
-
+const { from, range, of, create } = Observable;
+const fs = require('fs')
 const pages = function(data) {
     let dom = JSDOM.fragment(data);
     
@@ -82,19 +82,29 @@ const processtrigger = function(trigger_data) {
 }
 
 const info = function(data) {
-
     let dom = new JSDOM(data);
+    let i = 0
+    const extract = (expression, input_data) => {
+	let i = dom.window.document.querySelector(expression);
+	if(i) {
+	    return i.textContent;
+	}
+	else {
+	    console.log(`error looking up input ${input_data}`)
 
-    let input = dom.window.document.querySelector('table.status tr.first td:nth-child(3)').textContent;
+	}
+	return ""
+    }
+    let input = extract('table.status tr.first td:nth-child(3)', 'name')
     input = input.split('\n')[1];
     let image = dom.window.document.querySelector('table.status tr.first td:first-child img');
-    let number = dom.window.document.querySelector('table.status tr:nth-child(2) td:nth-child(2)').textContent;
-    let rarity = dom.window.document.querySelector('table.status tr:nth-child(2) td:nth-child(4)').textContent;
-    let level = dom.window.document.querySelector('table.status tr:nth-child(5) td:nth-child(2)').textContent;
-    let abilities = dom.window.document.querySelector('table.status tr:nth-child(8) td').textContent;
+    let number = extract('table.status tr:nth-child(2) td:nth-child(2)', 'number');
+    let rarity = extract('table.status tr:nth-child(2) td:nth-child(4)','rarity');
+    let level = extract('table.status tr:nth-child(5) td:nth-child(2)','level');
+    let abilities = extract('table.status tr:nth-child(8) td','abilities');
     
-    let cost = dom.window.document.querySelector('table.status tr:nth-child(5) td:nth-child(4)').textContent;
-    let power = dom.window.document.querySelector('table.status tr:nth-child(6) td:nth-child(2)').textContent;
+    let cost = extract('table.status tr:nth-child(5) td:nth-child(4)', 'cost');
+    let power = extract('table.status tr:nth-child(6) td:nth-child(2)', 'power');
     let soul = dom.window.document.querySelectorAll('table.status tr:nth-child(6) td:nth-child(4) img').length
     let trigger = processtrigger(dom.window.document.querySelectorAll('table.status tr:nth-child(7) td:nth-child(2) img'))
     let couchdbid = number.trim().toLowerCase().replace('/','-').replace(/-/g,'_')
@@ -114,14 +124,16 @@ const info = function(data) {
 let url = 'http://ws-tcg.com/en/jsp/cardlist/expansionDetail';
 
 const cardset = function(id) {
+    let pageCounter = 0;
     return from(httpPromise(url,'POST','expansion_id=' + id))
 
 	.map(pages)
 	.mergeMap(input => {
 
-	    return range(1,input);
+	    return range(1,input)
 	})
 	.mergeMap(i => {
+
 	    return from(httpPromise(url, 'POST', 'expansion_id=' + id + '&page=' + i))
 	})
 	.map(page)
@@ -129,13 +141,19 @@ const cardset = function(id) {
 	    return from(data)
 	})
 	.mergeMap( ({href}) => {
-//	    console.log("looking up " + href);
-	    return from(httpPromise('http://ws-tcg.com/en/cardlist/list/' + href))
-		.map(info)
+//	    console.log(`looking up ${href}`)
+	    href = href.substr(1)
+	    let [key,value] = href.split("=")
+	    value = encodeURI(value)
+	    return from(httpPromise(`http://ws-tcg.com/en/cardlist/list/?${key}=${value}`))
+		.do(data => fs.writeFileSync(`/tmp/${encodeURIComponent(value)}.html`, data))
+	       	.map(info)
 		.catch(e => {
-		    console.log("Error lookup: " + href + ": " + e);
-		    return of("")
+		    console.log(`Error lookup: ${href} via ${key}=${value}`);
+		    console.log(e)
+		    return of({})
 		})
+	 
 	})
 
 
